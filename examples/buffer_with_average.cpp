@@ -31,7 +31,7 @@ int main()
 		//place value in circular buffer that will never overflow
 		values[i%LENGTH]=getRandomInteger(1,100);
 		
-		//print out each integer
+		//calculate average
 		float sum=0;
 		for(int j=0;j<LENGTH;j++)
 		{
