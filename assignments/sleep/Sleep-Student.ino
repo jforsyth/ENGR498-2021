@@ -83,7 +83,7 @@ void loop() {
   /**
      Follow the process in the ATMEL documentation to do to sleep.
      Try out different sleep modes.
-     https://www.microchip.com/webdoc/AVRLibcReferenceManual/group__avr__sleep.html
+     https://www.nongnu.org/avr-libc/user-manual/group__avr__sleep.html
   */
 
   /** The 5 different modes are:
