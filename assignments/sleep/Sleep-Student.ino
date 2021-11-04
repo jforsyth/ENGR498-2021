@@ -1,26 +1,69 @@
-/**
-   Arduino source file for ECE 420 Assignment #1
-*/
-
-//include header for sleep library
+//comment this out if working in Arduino IDE
+#include <Arduino.h> 
 #include <avr/sleep.h>
+#include <avr/interrupt.h>
 
 /**
-   setup() executes once at boot
-*/
+ * Define relevant USB Interrupt Flags and bits
+ */
+
+#define UDINT_ADDRESS 0xE1
+#define UDIEN_ADDRESS 0xE2
+
+#define USBCON_ADDRESS 0xD8
+#define USBINT_ADDRESS 0xDA
+
+
+volatile uint8_t* UDINT_PTR = (uint8_t*)UDINT_ADDRESS;
+volatile uint8_t* USBINT_PTR = (uint8_t*)USBINT_ADDRESS;
+
+volatile uint8_t* USBCON_PTR = (uint8_t*)USBCON_ADDRESS;
+volatile uint8_t* UDIEN_PTR = (uint8_t*)UDIEN_ADDRESS;
+
+/**
+ * Use this function to disable USB interrupts. However, you may
+ * have challenges talking with the PC again to program the board.
+ */
+void disableUSBInterrupts()
+{
+   //clear bit 4 to disable WAKEUPE Interrupt
+  *UDIEN_PTR = *UDIEN_PTR & ~(0x10);
+
+  //clear bit 0 to disable WAKEUPE Interrupt
+  *UDIEN_PTR = *UDIEN_PTR & ~(0x01);
+
+  //clear bit 0 to disable VBUSTI Interrupt
+  *USBCON_PTR = *USBCON_PTR & ~(0x1); 
+}
+
+void delayLoop()
+{
+	Serial.println("Begin the count down! Blink Fast!");
+	long starTime = millis();
+	const long totalDelayMS = 20000;
+
+	bool timeExpired = (millis() - starTime) > totalDelayMS;
+	while (!timeExpired)
+	{
+		digitalWrite(13, HIGH);
+		delay(100);
+		digitalWrite(13, LOW);
+		delay(100);
+
+		timeExpired = (millis() - starTime) > totalDelayMS;
+
+		Serial.print(".");
+	}
+	Serial.println("");
+}
+
 void setup() {
-
-  //configure on-board LED as OUTPUT
   pinMode(13, OUTPUT);
-
-  //Initialize Serial/UART for 9600 baud
   Serial.begin(9600);
 
-  //15s delay so we can recover from
-  //power down mode
-  delay(15000);
-  
-  //print a message to know we're alive
+  //let the Serial spin up
+  delay(1000);
+
   Serial.println("Hello world!");
 
   /**
@@ -31,101 +74,66 @@ void setup() {
   delayLoop();
 }
 
-/**
-   A delay function that blinks the LED while a count down is going on
-*/
-void delayLoop()
-{
-  Serial.println("Begin the count down!");
-  long startTime = millis();
-  const long totalDelay = 5000;
 
-  bool timeExpired = (millis() - startTime) > totalDelay;
-  while (!timeExpired)
-  {
-    digitalWrite(13, HIGH);
-    delay(100);
-    digitalWrite(13, LOW);
-    delay(100);
 
-    timeExpired = (millis() - startTime) > totalDelay;
-  }
-}
+boolean ledState = false;
 
-/**
-   loop is executed continuously
-*/
 void loop() {
 
   /**
      Follow the process in the ATMEL documentation to do to sleep.
      Try out different sleep modes.
      https://www.microchip.com/webdoc/AVRLibcReferenceManual/group__avr__sleep.html
+  */
 
-    The 5 different modes are:
-            SLEEP_MODE_IDLE
+  /** The 5 different modes are:
+            SLEEP_MODE_IDLE         -the least power savings
             SLEEP_MODE_ADC
             SLEEP_MODE_PWR_SAVE
             SLEEP_MODE_STANDBY
-            SLEEP_MODE_PWR_DOWN
+            SLEEP_MODE_PWR_DOWN     -the most power savings
+
+    you can call them via set_sleep_mode(SLEEP_MODE_IDLE);...etc.
   */
 
-
+  
   //set the desired sleep mode
-  /**
-       Your code here
-  */
+  //*** YOUR CODE HERE ***//
+  
 
   //stop interrupts (execute atomically)
-  /**
-       Your code here
-  */
+  cli();
 
-  /**
-     Follow the code template from the AVR Sleep
-     documentation
-  */
   boolean someCondition = true;
   if (someCondition)
   {
 
     //print message and delay so serial is flushed.
-    //Otherwise message will not complete
     Serial.println("Good night!");
     Serial.flush();
     delay(1000);
 
     //enable sleep mode by setting the sleep bit
-    /**
-       Your code here
-    */
+    sleep_enable();
 
-    //re-enable interrupts. If you do not, then you will never
-    //awake from sleep...
-    /**
-       Your code here
-    */
+    //Normally we would re-enable interrupts. However, Arduino sets up lots
+    //of interrupts that we would have to turn off for this to work. Right now
+    //we're just going to "not wake up" so we can see power levels.
+    //sei();
 
     //execute the sleep instruction and actually go to sleep
-    /**
-       Your code here
-    */
+    sleep_cpu();
 
     //WAKE UP! First thing to do is disable sleep so we
     //don't do it again.
-    /**
-       Your code here
-    */
+    sleep_disable();
   }
+  sei();
 
-  //restore interrupts now that processor is awake
-  /**
-       Your code here
-  */
-
-  //Print a message saying you're back!
   Serial.println("I'm alive!");
 
-  //delay again before entering sleep
+  digitalWrite(13, ledState);
+  ledState = !ledState;
+
   delayLoop();
 }
