@@ -191,6 +191,6 @@ void loop()
 	report();
 	
 	
-	delay(5);
+	delay(100);
 
 }
