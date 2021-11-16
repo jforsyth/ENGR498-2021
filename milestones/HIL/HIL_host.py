@@ -1,12 +1,20 @@
 import serial
-import time
+from serial.tools.list_ports import comports
 
-# portName='/dev/cu.usbmodem1461301'
-portName = 'COM3'
+portName='/dev/cu.usbmodem14601'
+#portName = 'COM3'
 baudRate = 9600
 
-ser = serial.Serial(portName, baudRate)
-print("Opening port " + ser.name)
+try:
+    ser = serial.Serial(portName, baudRate)
+    print("Opening port " + ser.name)
+
+except:
+    print("Couldn't open port. Try changing portName to one of the options below:")
+    ports_list = comports()
+    for port_candidate in ports_list:
+        print(port_candidate.device)
+    exit(-1)
 
 if ser.is_open == True:
     print("Success!")
